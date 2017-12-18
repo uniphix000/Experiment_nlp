@@ -1,10 +1,11 @@
-# coding :utf-8
+# -*- coding: utf-8 -*-
 import codecs
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import optim
 from torch.autograd import Variable
+from main import use_cuda
 
 label2idx = {'B':0, 'I':1, 'E':2, 'S':3}
 idx2label = {idx:word for word, idx in label2idx.items()}
@@ -12,7 +13,6 @@ oov = 1
 
 class Lang:
     def __init__(self):
-        super(Lang, self).__init__()
         self.word2idx = {'pad':0, 'oov':1}
         self.idx2word = {}
         self.wordsize = 2
@@ -166,14 +166,16 @@ def get_batch(order_list, data_x_idx, data_y_idx, padding_idx = 0):
     :return:
     '''
     lens = []
-    batch_x = [data_x_idx[i] for i in order_list]
-    batch_y = [data_y_idx[i] for i in order_list]
+    order_list = list(order_list)
+    sort_list = sorted(order_list, key=lambda i: -len(data_y_idx[i]))  # 完成了降序
+    batch_x = [data_x_idx[i] for i in sort_list]
+    batch_y_unpad = [data_y_idx[i] for i in sort_list]
 
     batch_x = padding(batch_x, padding_idx)
-    batch_y = padding(batch_y, padding_idx)
+    batch_y = padding(batch_y_unpad, 4)
 
-    batch_x = Variable(torch.LongTensor(batch_x))
-    batch_y = Variable(torch.LongTensor(batch_y))
+    batch_x = Variable(torch.LongTensor(batch_x)).cuda() if use_cuda else Variable(torch.LongTensor(batch_x))
+    batch_y = Variable(torch.LongTensor(batch_y)).cuda() if use_cuda else Variable(torch.LongTensor(batch_y))
 
 
     return batch_x, batch_y

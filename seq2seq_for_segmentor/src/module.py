@@ -44,7 +44,7 @@ class Decoder(nn.Module):
         self.embed_size = embed_size
         self.lstm = nn.LSTM(embed_size,
                             hidden_size,
-                            batch_first=True)
+                            batch_first=True, num_layers=1)
         self.linear = nn.Linear(hidden_size, labels_size)
 
     def forward(self, input, h_c):
@@ -63,6 +63,7 @@ class Decoder(nn.Module):
 
         output, (h, c) = self.lstm(input, h_c)
         label = self.linear(h)
+
         return output, (h, c), label
 
 
